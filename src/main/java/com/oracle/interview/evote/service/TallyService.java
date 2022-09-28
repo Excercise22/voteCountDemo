@@ -33,15 +33,16 @@ public class TallyService implements TallyServiceInterface {
     }
 
     public String beginTally(List<Voter> voterList) throws Exception {
-        int round = 1;
+        int round;
         List<Ballot> ballots = ballotInterface.createBallots(voterList);
 
         if(ballots.size() != 0) {
             Map<String, List<Ballot>> candidatesBucket = ballotInterface.createCandidatesBucket(ballots);
-            round++;
+            round = 2;
             Optional<String> winner = hasClearWin(candidatesBucket);
            /* while (winner.isEmpty()) {
                 String candidatesToEliminate = findPotentialElimination(candidatesBucket);
+                updatedBuckets = ballotInterface.updateBallotsWithElimination(candidatesBucket, candidatesToEliminate);
             }*/
             return winner.get();
         } else {

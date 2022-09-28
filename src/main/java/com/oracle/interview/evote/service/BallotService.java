@@ -74,5 +74,28 @@ public class BallotService implements BallotInterface {
         });
         return candidateBucket;
     }
+    public long countExhaustedBallots(Map<String, List<Ballot>> updatedBallotMap, String candidatesToEliminate) {
+        return updatedBallotMap.entrySet().stream().filter(m -> m.getKey().equalsIgnoreCase(candidatesToEliminate)).flatMap(entry -> entry.getValue().stream()).map(v -> v.getVoteMap()).filter(pref -> pref.values().stream().allMatch(p -> p == CANDIDATE_ELIMINATION_TAG)).count();
+    }
+
+    public Map<String, List<Ballot>> updateBallotsWithElimination(Map<String, List<Ballot>> candidateBucket, String candidatesToEliminate) {
+        Map<String, List<Ballot>> updatedBucket;
+        updatedBucket = candidateBucket.entrySet().stream().map(entry -> {
+            List<Ballot> ballots = entry.getValue();
+            List<Ballot> updatedBallots = new ArrayList<>();
+            for (int bIndex = 0; bIndex < ballots.size(); bIndex++) {
+                Map<String, Integer> voterMap = ballots.get(bIndex).getVoteMap();
+                if (voterMap.containsKey(candidatesToEliminate)) {
+                    voterMap.replace(candidatesToEliminate, CANDIDATE_ELIMINATION_TAG);
+                }
+                updatedBallots.add(new Ballot(voterMap));
+            }
+            entry.setValue(updatedBallots);
+            return entry;
+        }).collect(Collectors.toMap(k -> k.getKey(), k -> k.getValue()));
+        return updatedBucket;
+
+    }
+
 
 }

@@ -11,4 +11,6 @@ public interface BallotInterface {
         List<Ballot> createBallots(List<Voter> voterList) throws  Exception;
         Optional<Ballot> createBallot(Voter voter) throws Exception;
         Map<String, List<Ballot>> createCandidatesBucket(List<Ballot> ballots);
+        Map<String, List<Ballot>> updateBallotsWithElimination(Map<String, List<Ballot>> candidateBucket, String candidatesToEliminate);
+        long countExhaustedBallots(Map<String, List<Ballot>> updatedBallotMap, String candidatesToEliminate);
 }
