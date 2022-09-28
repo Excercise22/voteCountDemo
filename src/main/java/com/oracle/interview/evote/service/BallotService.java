@@ -6,6 +6,8 @@ import com.oracle.interview.evote.domain.Voter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toList;
+
 public class BallotService implements BallotInterface {
     private static Map<Character, String> candidates;
     private static final int CANDIDATE_ELIMINATION_TAG = -1;
@@ -94,6 +96,40 @@ public class BallotService implements BallotInterface {
             return entry;
         }).collect(Collectors.toMap(k -> k.getKey(), k -> k.getValue()));
         return updatedBucket;
+
+    }
+
+
+    public  Map<String, List<Ballot>> reAllocateBallots(Map<String, List<Ballot>> updatedBucket, String candidatesToEliminate, int round) {
+        System.out.println(String.format("*****  Round %d *****", round));
+        System.out.println(String.format("Candidate %s eliminated", candidatesToEliminate));
+        Map<String, List<Ballot>> reallocatedBucket = new HashMap<>();
+        int exhaustedBallot = (int) countExhaustedBallots(updatedBucket, candidatesToEliminate);
+        List<Ballot> reallocateBallots = updatedBucket.entrySet().stream().filter(entry -> entry.getKey().equalsIgnoreCase(candidatesToEliminate)).flatMap(e -> e.getValue().stream()).collect(toList());
+        updatedBucket.remove(candidatesToEliminate);
+        if (exhaustedBallot > 0) {
+            // remove ballot from reallocation
+            reallocateBallots = reallocateBallots.stream().filter(ballot -> {
+                return !ballot.getVoteMap().values().stream().allMatch(p -> p == CANDIDATE_ELIMINATION_TAG);
+            }).collect(toList());
+            System.out.println("Exhausted ballots: " + exhaustedBallot);
+
+        }
+
+        List<Ballot> ballotsWithReallocation = null;
+        for (int index = 0; index < reallocateBallots.size(); index++) {
+            Ballot ballotToReallocate = reallocateBallots.get(index);
+            Map.Entry<String, Integer> highestPrefEntry = ballotToReallocate.getVoteMap().entrySet().stream().filter(v -> v.getValue() != CANDIDATE_ELIMINATION_TAG).sorted(Comparator.comparing(Map.Entry::getValue)).collect(toList()).get(0);
+            ballotsWithReallocation = updatedBucket.entrySet().stream().filter(u -> u.getKey().equalsIgnoreCase(highestPrefEntry.getKey())).flatMap(s -> s.getValue().stream()).collect(toList());
+            ballotsWithReallocation.add(ballotToReallocate);
+            updatedBucket.put(highestPrefEntry.getKey(), ballotsWithReallocation);
+
+        }
+        reallocatedBucket.putAll(updatedBucket);
+        reallocatedBucket.entrySet().forEach(entry -> {
+            System.out.println(String.format("Candidate %s having votes %d", entry.getKey(), entry.getValue().size()));
+        });
+        return reallocatedBucket;
 
     }
 

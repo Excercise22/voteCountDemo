@@ -38,12 +38,16 @@ public class TallyService implements TallyServiceInterface {
 
         if(ballots.size() != 0) {
             Map<String, List<Ballot>> candidatesBucket = ballotInterface.createCandidatesBucket(ballots);
+            Map<String, List<Ballot>> updatedBuckets;
             round = 2;
             Optional<String> winner = hasClearWin(candidatesBucket);
-           /* while (winner.isEmpty()) {
+            while (winner.isEmpty()) {
                 String candidatesToEliminate = findPotentialElimination(candidatesBucket);
                 updatedBuckets = ballotInterface.updateBallotsWithElimination(candidatesBucket, candidatesToEliminate);
-            }*/
+                candidatesBucket = ballotInterface.reAllocateBallots(updatedBuckets, candidatesToEliminate, round);
+                round++;
+                winner = hasClearWin(candidatesBucket);
+            }
             return winner.get();
         } else {
             return NO_VALID_BALLOTS_FOUND;
